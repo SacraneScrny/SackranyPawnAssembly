@@ -14,22 +14,40 @@ using UnityEngine;
 namespace SackranyPawnAssembly.Components
 {
     [RequireComponent(typeof(Pawn))]
-    [RequireComponent(typeof(PawnAssemblyConnector))]
+    [RequireComponent(typeof(PawnAssemblyReference))]
     public class PawnAssembly : MonoBehaviour
     {
         Pawn _pawn;
-        PawnAssemblyConnector _assemblyConnector;
+        PawnAssemblyReference _assemblyReference;
+        bool _deserialized;
+        
+        public string Guid { get; private set; }
         
         void Awake()
         {
+            Guid = System.Guid.NewGuid().ToString();
             _pawn = GetComponent<Pawn>();
-            _assemblyConnector = GetComponent<PawnAssemblyConnector>();
+            _assemblyReference = GetComponent<PawnAssemblyReference>();
+        }
+        public void Load(string guid = null)
+        {
+            if (guid == null) guid = Guid;
+            else Guid = guid;
+            
+            var data = PawnAssemblySerializer.GetAssemblyData(Guid);
+            if (data != null)
+            {
+                Deserialize(data.Data);
+                transform.position = data.Position;
+                transform.rotation = data.Rotation;
+                _deserialized = true;
+            }
         }
 
         internal List<PawnPartData> Serialize()
         {
             var parts = new List<PawnPartData>();
-            var pawnParts = _pawn.GetComponentsInChildren<PawnAssemblyConnector>();
+            var pawnParts = _pawn.GetComponentsInChildren<PawnAssemblyReference>();
             
             var param = pawnParts.ToDictionary((k) => k.Guid, v => v.GetComponent<Pawn>());
             foreach (var p in param.Values)
@@ -41,7 +59,7 @@ namespace SackranyPawnAssembly.Components
             
             foreach (var p in pawnParts)
             {
-                if (p == _assemblyConnector) continue;
+                if (p == _assemblyReference) continue;
 
                 var limbData = new Dictionary<Type, object[]>();
                 foreach (var l in p.GetComponent<Pawn>().GetLimbs())
@@ -52,7 +70,7 @@ namespace SackranyPawnAssembly.Components
                 
                 var partData = new PawnPartData
                 {
-                    Guid = p.Guid,
+                    ReferenceGuid = p.Guid,
                     HierarchyPath = GetRelativePath(p.transform, transform).ToArray(),
                     LocalPosition = p.transform.localPosition,
                     LocalRotation = p.transform.localRotation,
@@ -79,6 +97,8 @@ namespace SackranyPawnAssembly.Components
         
         internal void Deserialize(List<PawnPartData> parts)
         {
+            if (_deserialized) return;
+            
             if (!ValidateParts(parts))
             {
                 Debug.LogError("[SackranyPawn] Failed to deserialize PawnAssembly: Some parts are missing in the cache.");
@@ -88,10 +108,10 @@ namespace SackranyPawnAssembly.Components
             var instantiatedParts = new List<(Pawn, Dictionary<Type,object[]>)>();
             foreach (var part in sortedParts)
             {
-                var partPrefab = AssemblyResourcesCache.GetPart(part.Guid);
+                var partPrefab = AssemblyResourcesCache.GetPart(part.ReferenceGuid);
                 if (partPrefab == null)
                 {
-                    Debug.LogError($"[SackranyPawn] Failed to deserialize PawnAssembly: Part with GUID {part.Guid} not found in cache.");
+                    Debug.LogError($"[SackranyPawn] Failed to deserialize PawnAssembly: Part with GUID {part.ReferenceGuid} not found in cache.");
                     continue;
                 }
                 
@@ -107,7 +127,7 @@ namespace SackranyPawnAssembly.Components
             }
             
             var param = instantiatedParts
-                .ToDictionary((k) => k.Item1.GetComponent<PawnAssemblyConnector>().Guid, v => v.Item1);
+                .ToDictionary((k) => k.Item1.GetComponent<PawnAssemblyReference>().Guid, v => v.Item1);
             foreach (var p in param.Values)
                 foreach (var l in p.GetLimbs())
                 {
@@ -125,11 +145,13 @@ namespace SackranyPawnAssembly.Components
                         serializableLimb.Deserialize(lbt.Value);
                 }
             }
+            
+            _deserialized = true;
         }
         static bool ValidateParts(List<PawnPartData> parts)
         {
             foreach (var part in parts)
-                if (!AssemblyResourcesCache.HasPart(part.Guid)) return false;
+                if (!AssemblyResourcesCache.HasPart(part.ReferenceGuid)) return false;
             return true;
         }
         public static Transform FindTransformByPath(Transform root, string[] path)

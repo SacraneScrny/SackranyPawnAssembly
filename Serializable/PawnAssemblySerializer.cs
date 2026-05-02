@@ -28,16 +28,16 @@ namespace SackranyPawnAssembly.Serializable
                 var assemblies = Object.FindObjectsByType<Components.PawnAssembly>(FindObjectsSortMode.None);
                 foreach (var assembly in assemblies)
                 {
-                    var connector = assembly.GetComponent<Components.PawnAssemblyConnector>();
-                    if (connector == null) continue;
+                    var refId = assembly.GetComponent<Components.PawnAssemblyReference>();
+                    if (refId == null) continue;
                     
-                    string guid = connector.Guid;
-                    if (!_serializedData.Data.TryGetValue(guid, out var assemblyData))
+                    if (!_serializedData.Data.TryGetValue(assembly.Guid, out var assemblyData))
                     {
                         assemblyData = new PawnAssemblyData();
-                        _serializedData.Data[guid] = assemblyData;
+                        _serializedData.Data[assembly.Guid] = assemblyData;
                     }
 
+                    assemblyData.ReferenceGuid = refId.Guid;
                     assemblyData.ExistedInScene = true;
                     assemblyData.Position = assembly.transform.position;
                     assemblyData.Rotation = assembly.transform.rotation;
@@ -54,22 +54,18 @@ namespace SackranyPawnAssembly.Serializable
         {
             foreach (var data in _serializedData.Data)
             {
-                var assembly = AssemblyResourcesCache.GetAssembly(data.Key);
+                var assembly = AssemblyResourcesCache.GetAssembly(data.Value.ReferenceGuid);
                 if (assembly == null) continue;
                 
                 if (data.Value.ExistedInScene)
                 {
-                    var go = Object.Instantiate(assembly.gameObject);
-                    go.transform.position = data.Value.Position;
-                    go.transform.rotation = data.Value.Rotation;
-                    
-                    var pAss = go.GetComponent<Components.PawnAssembly>();
-                    if (pAss == null) continue;
-                    
-                    pAss.Deserialize(data.Value.Data);
+                    Object.Instantiate(assembly.gameObject);
                 }
             }
         }
+        
+        public static PawnAssemblyData GetAssemblyData(string guid) 
+            => _serializedData.Data.GetValueOrDefault(guid);
     }
 
     [Serializable]
@@ -80,6 +76,7 @@ namespace SackranyPawnAssembly.Serializable
     [Serializable]
     public class PawnAssemblyData
     {
+        public string ReferenceGuid;
         public bool ExistedInScene;
         public Vector3 Position;
         public Quaternion Rotation;
@@ -88,7 +85,7 @@ namespace SackranyPawnAssembly.Serializable
     [Serializable]
     public class PawnPartData
     {
-        public string Guid;
+        public string ReferenceGuid;
         public string[] HierarchyPath;
         public Vector3 LocalPosition;
         public Quaternion LocalRotation;

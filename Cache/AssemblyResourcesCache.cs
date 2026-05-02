@@ -65,13 +65,13 @@ namespace SackranyPawnAssembly.Cache
 
         static void ScanForParts()
         {
-            var parts = Resources.LoadAll<PawnAssemblyConnector>(partsPath);
+            var parts = Resources.LoadAll<PawnAssemblyReference>(partsPath);
             foreach (var part in parts)
                 _partsCache[part.Guid] = part.GetComponent<Pawn>();
         }
         static void ScanForAssemblies()
         {
-            var assemblies = Resources.LoadAll<PawnAssemblyConnector>(assembliesPath);
+            var assemblies = Resources.LoadAll<PawnAssemblyReference>(assembliesPath);
             foreach (var assemble in assemblies)
                 _assembliesCache[assemble.Guid] = assemble.GetComponent<PawnAssembly>();
         }

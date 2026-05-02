@@ -7,7 +7,7 @@ using UnityEngine;
 namespace SackranyPawnAssembly.Components
 {
     [RequireComponent(typeof(Pawn))]
-    public class PawnAssemblyConnector : MonoBehaviour
+    public class PawnAssemblyReference : MonoBehaviour
     {
         [SerializeField] string _guid;
         public string Guid => _guid;
