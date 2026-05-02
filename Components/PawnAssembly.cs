@@ -36,7 +36,7 @@ namespace SackranyPawnAssembly.Components
                 foreach (var l in p.GetLimbs())
                 {
                     if (l is IAssemblyLimb assemblyLimb)
-                        assemblyLimb.OnDisassembly(param);
+                        assemblyLimb.OnAssemblySerialize(param);
                 }
             
             foreach (var p in pawnParts)
@@ -112,7 +112,7 @@ namespace SackranyPawnAssembly.Components
                 foreach (var l in p.GetLimbs())
                 {
                     if (l is IAssemblyLimb assemblyLimb)
-                        assemblyLimb.OnAssembly(param);
+                        assemblyLimb.OnAssemblyDeserialize(param);
                 }
             foreach (var p in instantiatedParts)
             {

@@ -31,8 +31,8 @@ namespace SackranyPawnAssembly.Serializable
                     var connector = assembly.GetComponent<Components.PawnAssemblyConnector>();
                     if (connector == null) continue;
                     
-                    Guid guid = connector.Guid;
-                    if (!_serializedData.Data.TryGetValue(guid, out PawnAssemblyData assemblyData))
+                    string guid = connector.Guid;
+                    if (!_serializedData.Data.TryGetValue(guid, out var assemblyData))
                     {
                         assemblyData = new PawnAssemblyData();
                         _serializedData.Data[guid] = assemblyData;
@@ -75,7 +75,7 @@ namespace SackranyPawnAssembly.Serializable
     [Serializable]
     public class PawnAssembliesData
     {
-        public Dictionary<Guid, PawnAssemblyData> Data = new ();
+        public Dictionary<string, PawnAssemblyData> Data = new ();
     }
     [Serializable]
     public class PawnAssemblyData
@@ -88,7 +88,7 @@ namespace SackranyPawnAssembly.Serializable
     [Serializable]
     public class PawnPartData
     {
-        public Guid Guid;
+        public string Guid;
         public string[] HierarchyPath;
         public Vector3 LocalPosition;
         public Quaternion LocalRotation;

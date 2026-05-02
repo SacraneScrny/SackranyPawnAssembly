@@ -15,8 +15,8 @@ namespace SackranyPawnAssembly.Cache
         const string assembliesPath = mainPath + "/Assemblies";
         const string partsPath = mainPath + "/Parts";
         
-        static readonly Dictionary<Guid, Pawn> _partsCache = new ();
-        static readonly Dictionary<Guid, PawnAssembly> _assembliesCache = new ();
+        static readonly Dictionary<string, Pawn> _partsCache = new ();
+        static readonly Dictionary<string, PawnAssembly> _assembliesCache = new ();
         
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void Init()
@@ -76,9 +76,13 @@ namespace SackranyPawnAssembly.Cache
                 _assembliesCache[assemble.Guid] = assemble.GetComponent<PawnAssembly>();
         }
         
-        public static Pawn GetPart(Guid guid) => _partsCache.GetValueOrDefault(guid);
-        public static bool HasPart(Guid guid) => _partsCache.ContainsKey(guid);
+        public static Pawn GetPart(Guid guid) => GetPart(guid.ToString());
+        public static Pawn GetPart(string guid) => _partsCache.GetValueOrDefault(guid);
         
-        public static PawnAssembly GetAssembly(Guid guid) => _assembliesCache.GetValueOrDefault(guid);
+        public static bool HasPart(Guid guid) => HasPart(guid.ToString());
+        public static bool HasPart(string guid) => _partsCache.ContainsKey(guid);
+        
+        public static PawnAssembly GetAssembly(Guid guid) => GetAssembly(guid.ToString());
+        public static PawnAssembly GetAssembly(string guid) => _assembliesCache.GetValueOrDefault(guid);
     }
 }

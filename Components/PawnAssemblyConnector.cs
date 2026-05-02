@@ -10,22 +10,12 @@ namespace SackranyPawnAssembly.Components
     public class PawnAssemblyConnector : MonoBehaviour
     {
         [SerializeField] string _guid;
-        
-        Guid _cachedGuid;
-        public Guid Guid
-        {
-            get
-            {
-                if (_cachedGuid == Guid.Empty)
-                    _cachedGuid = new Guid(_guid);
-                return _cachedGuid;
-            }
-        }
+        public string Guid => _guid;
 
         void OnValidate()
         {
             if (string.IsNullOrEmpty(_guid))
-                _guid = Guid.NewGuid().ToString();
+                _guid = System.Guid.NewGuid().ToString();
         }
     }
 }
