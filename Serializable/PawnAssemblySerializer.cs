@@ -92,5 +92,6 @@ namespace SackranyPawnAssembly.Serializable
         public string[] HierarchyPath;
         public Vector3 LocalPosition;
         public Quaternion LocalRotation;
+        public Dictionary<Type, object[]> LimbData;
     }
 }

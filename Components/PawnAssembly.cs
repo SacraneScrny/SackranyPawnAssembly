@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using SackranyPawn.Components;
+using SackranyPawn.Entities.Modules.ModuleComposition;
 
 using SackranyPawnAssembly.Cache;
 using SackranyPawnAssembly.Entities;
@@ -41,12 +42,21 @@ namespace SackranyPawnAssembly.Components
             foreach (var p in pawnParts)
             {
                 if (p == _assemblyConnector) continue;
+
+                var limbData = new Dictionary<Type, object[]>();
+                foreach (var l in p.GetComponent<Pawn>().GetLimbs())
+                {
+                    if (l is ISerializableLimb serializableLimb)
+                        limbData.Add(l.GetType(), serializableLimb.Serialize());
+                }
+                
                 var partData = new PawnPartData
                 {
                     Guid = p.Guid,
                     HierarchyPath = GetRelativePath(p.transform, transform).ToArray(),
                     LocalPosition = p.transform.localPosition,
                     LocalRotation = p.transform.localRotation,
+                    LimbData = limbData
                 };
                 parts.Add(partData);
             }
@@ -75,7 +85,7 @@ namespace SackranyPawnAssembly.Components
                 return;
             }
             var sortedParts = parts.OrderBy(x => x.HierarchyPath.Length).ToArray();
-            List<Pawn> instantiatedParts = new ();
+            var instantiatedParts = new List<(Pawn, Dictionary<Type,object[]>)>();
             foreach (var part in sortedParts)
             {
                 var partPrefab = AssemblyResourcesCache.GetPart(part.Guid);
@@ -86,7 +96,7 @@ namespace SackranyPawnAssembly.Components
                 }
                 
                 var partInstance = Instantiate(partPrefab, transform);
-                instantiatedParts.Add(partInstance);
+                instantiatedParts.Add((partInstance, part.LimbData));
 
                 var targetParent = FindTransformByPath(transform, part.HierarchyPath);
                 if (targetParent != null)
@@ -96,13 +106,25 @@ namespace SackranyPawnAssembly.Components
                 partInstance.transform.localRotation = part.LocalRotation;
             }
             
-            var param = instantiatedParts.ToDictionary((k) => k.GetComponent<PawnAssemblyConnector>().Guid, v => v);
+            var param = instantiatedParts
+                .ToDictionary((k) => k.Item1.GetComponent<PawnAssemblyConnector>().Guid, v => v.Item1);
             foreach (var p in param.Values)
                 foreach (var l in p.GetLimbs())
                 {
                     if (l is IAssemblyLimb assemblyLimb)
                         assemblyLimb.OnAssembly(param);
                 }
+            foreach (var p in instantiatedParts)
+            {
+                var limbsByTypes = p.Item1.GetLimbs().ToDictionary((k) => k.GetType(), v => v);
+                
+                foreach (var lbt in p.Item2)
+                {
+                    if (!limbsByTypes.TryGetValue(lbt.Key, out var limb)) continue;
+                    if (limb is ISerializableLimb serializableLimb)
+                        serializableLimb.Deserialize(lbt.Value);
+                }
+            }
         }
         static bool ValidateParts(List<PawnPartData> parts)
         {
