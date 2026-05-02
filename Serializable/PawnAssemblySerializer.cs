@@ -52,15 +52,14 @@ namespace SackranyPawnAssembly.Serializable
         
         static void LoadData()
         {
-            foreach (var data in _serializedData.Data)
+            foreach (var (savedGuid, data) in _serializedData.Data)
             {
-                var assembly = AssemblyResourcesCache.GetAssembly(data.Value.ReferenceGuid);
-                if (assembly == null) continue;
-                
-                if (data.Value.ExistedInScene)
-                {
-                    Object.Instantiate(assembly.gameObject);
-                }
+                var assembly = AssemblyResourcesCache.GetAssembly(data.ReferenceGuid);
+                if (assembly == null || !data.ExistedInScene) continue;
+
+                var go = Object.Instantiate(assembly.gameObject);
+                var pAss = go.GetComponent<Components.PawnAssembly>();
+                pAss.Load(savedGuid);
             }
         }
         

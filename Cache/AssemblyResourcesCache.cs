@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 
 using SackranyPawn.Components;
+using SackranyPawn.Extensions;
+using SackranyPawn.Managers;
 
 using SackranyPawnAssembly.Components;
+using SackranyPawnAssembly.Managers;
 
 using UnityEngine;
 
@@ -35,6 +38,7 @@ namespace SackranyPawnAssembly.Cache
         #if UNITY_EDITOR
         static void CheckFolders()
         {
+            string resPath = "Assets/Resources/";
             string[] folders =
             {
                 mainPath,
@@ -46,7 +50,7 @@ namespace SackranyPawnAssembly.Cache
             {
                 if (!UnityEditor.AssetDatabase.IsValidFolder(path))
                 {
-                    string[] parts = path.Split('/');
+                    string[] parts = (resPath + path).Split('/');
                     string current = parts[0];
 
                     for (int i = 1; i < parts.Length; i++)
@@ -84,5 +88,7 @@ namespace SackranyPawnAssembly.Cache
         
         public static PawnAssembly GetAssembly(Guid guid) => GetAssembly(guid.ToString());
         public static PawnAssembly GetAssembly(string guid) => _assembliesCache.GetValueOrDefault(guid);
+        
+        public static IEnumerable<PawnAssembly> GetAllAssemblies() => _assembliesCache.Values;
     }
 }

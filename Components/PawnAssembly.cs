@@ -4,6 +4,7 @@ using System.Linq;
 
 using SackranyPawn.Components;
 using SackranyPawn.Entities.Modules.ModuleComposition;
+using SackranyPawn.Extensions;
 
 using SackranyPawnAssembly.Cache;
 using SackranyPawnAssembly.Entities;
@@ -115,7 +116,7 @@ namespace SackranyPawnAssembly.Components
                     continue;
                 }
                 
-                var partInstance = Instantiate(partPrefab, transform);
+                var partInstance = partPrefab.Pop();
                 instantiatedParts.Add((partInstance, part.LimbData));
 
                 var targetParent = FindTransformByPath(transform, part.HierarchyPath);
@@ -165,6 +166,40 @@ namespace SackranyPawnAssembly.Components
             }
 
             return current;
+        }
+        
+        void OnDestroy()
+        {
+            var pawnParts = _pawn.GetComponentsInChildren<PawnAssemblyReference>();
+            var sorted = pawnParts
+                .Where(p => p != _assemblyReference)
+                .OrderByDescending(p => GetRelativePath(p.transform, transform).Count);
+
+            foreach (var part in sorted)
+                part.GetComponent<Pawn>().Push();
+        }
+        
+        internal void OnPopped()
+        {
+            gameObject.SetActive(true);
+        }
+        internal void OnPushed()
+        {
+            var pawnParts = _pawn.GetComponentsInChildren<PawnAssemblyReference>();
+            var sorted = pawnParts
+                .Where(p => p != _assemblyReference)
+                .OrderByDescending(p => GetRelativePath(p.transform, transform).Count);
+
+            foreach (var part in sorted)
+            {
+                var pawn = part.GetComponent<Pawn>();
+                pawn.transform.SetParent(null);
+                pawn.Push();
+            }
+
+            _deserialized = false;
+            Guid = System.Guid.NewGuid().ToString();
+            gameObject.SetActive(false);
         }
     }
 }
