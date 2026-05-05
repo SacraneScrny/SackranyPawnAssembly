@@ -49,8 +49,9 @@ namespace SackranyPawnAssembly.Components
                 transform.position = data.Position;
                 transform.rotation = data.Rotation;
                 Pawn.Deserialize(data.LimbData);
-                _deserialized = true;
             }
+
+            _deserialized = true;
         }
 
         internal List<PawnPartData> Serialize()
