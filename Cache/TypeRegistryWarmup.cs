@@ -1,0 +1,67 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using SackranyPawnAssembly.ModuleTypes;
+
+using UnityEngine;
+
+namespace SackranyPawnAssembly.Cache
+{
+    internal static class TypeRegistryWarmup
+    {
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void Warmup()
+        {
+            TypeRegistry<IAssemblyModuleType>.Reset();
+
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            Register<IAssemblyModuleType>(assemblies);
+        }
+
+        static void Register<TBase>(Assembly[] assemblies) where TBase : class
+        {
+            var baseType = typeof(TBase);
+            var found = new List<Type>(64);
+
+            foreach (var assembly in assemblies)
+            {
+                CollectFromAssembly(assembly, baseType, found);
+            }
+            found.Sort(static (a, b) =>
+                string.Compare(a.FullName, b.FullName, StringComparison.Ordinal));
+
+            for (int i = found.Count - 1; i > 0; i--)
+                if (found[i] == found[i - 1]) found.RemoveAt(i);
+
+            foreach (var type in found)
+                TypeRegistry<TBase>.GetOrRegister(type);
+        }
+
+        static void CollectFromAssembly(Assembly assembly, Type baseType, List<Type> found)
+        {
+            Type[] types;
+            try
+            {
+                types = assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                types = e.Types;
+            }
+
+            if (types == null) return;
+
+            foreach (var type in types)
+            {
+                if (type == null) continue;
+                if (type.IsAbstract || type.IsInterface) continue;
+                if (type.IsGenericTypeDefinition) continue;
+
+                if (!baseType.IsAssignableFrom(type)) continue;
+
+                found.Add(type);
+            }
+        }
+    }
+}
