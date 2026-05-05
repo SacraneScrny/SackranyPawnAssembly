@@ -77,7 +77,7 @@ namespace SackranyPawnAssembly.Components
                 foreach (var l in p.GetComponent<Pawn>().GetLimbs())
                 {
                     if (l is ISerializableLimb serializableLimb)
-                        limbData.Add(l.GetType(), serializableLimb.Serialize());
+                        limbData[l.GetType()] = serializableLimb.Serialize();
                 }
                 
                 var partData = new PawnPartData
@@ -131,9 +131,13 @@ namespace SackranyPawnAssembly.Components
                 instantiatedParts.Add((partInstance, part.LimbData));
 
                 var targetParent = FindTransformByPath(transform, part.HierarchyPath);
-                if (targetParent != null)
-                    partInstance.transform.SetParent(targetParent, true);
-                
+                if (targetParent == null)
+                {
+                    Debug.LogWarning($"[SackranyPawn] Failed to find parent for part {part.ReferenceGuid}. Falling back to assembly root.");
+                    targetParent = transform;
+                }
+
+                partInstance.transform.SetParent(targetParent, false);
                 partInstance.transform.localPosition = part.LocalPosition;
                 partInstance.transform.localRotation = part.LocalRotation;
             }
