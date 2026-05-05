@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace SackranyPawnAssembly.Cache
 {
-    public static class AssemblyResourcesCache
+    public static class PawnAssemblyResourcesCache
     {
         const string mainPath = "PawnAssembly";
         const string assembliesPath = mainPath + "/Assemblies";
@@ -80,14 +80,14 @@ namespace SackranyPawnAssembly.Cache
                 _assembliesCache[assemble.Guid] = assemble.GetComponent<PawnAssembly>();
         }
         
-        public static Pawn GetPart(Guid guid) => GetPart(guid.ToString());
-        public static Pawn GetPart(string guid) => _partsCache.GetValueOrDefault(guid);
+        public static Pawn GetPart(Guid referenceGuid) => GetPart(referenceGuid.ToString());
+        public static Pawn GetPart(string referenceGuid) => _partsCache.GetValueOrDefault(referenceGuid);
         
-        public static bool HasPart(Guid guid) => HasPart(guid.ToString());
-        public static bool HasPart(string guid) => _partsCache.ContainsKey(guid);
+        public static bool HasPart(Guid referenceGuid) => HasPart(referenceGuid.ToString());
+        public static bool HasPart(string referenceGuid) => _partsCache.ContainsKey(referenceGuid);
         
-        public static PawnAssembly GetAssembly(Guid guid) => GetAssembly(guid.ToString());
-        public static PawnAssembly GetAssembly(string guid) => _assembliesCache.GetValueOrDefault(guid);
+        public static PawnAssembly GetAssembly(Guid referenceGuid) => GetAssembly(referenceGuid.ToString());
+        public static PawnAssembly GetAssembly(string referenceGuid) => _assembliesCache.GetValueOrDefault(referenceGuid);
         
         public static IEnumerable<PawnAssembly> GetAllAssemblies() => _assembliesCache.Values;
     }

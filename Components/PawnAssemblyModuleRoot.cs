@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace SackranyPawnAssembly.Components
 {
-    public class ModuleRoot : MonoBehaviour
+    public class PawnAssemblyModuleRoot : MonoBehaviour
     {
         [SerializeField] Point[] Points;
         
@@ -68,10 +68,10 @@ namespace SackranyPawnAssembly.Components
     {
         public readonly Pawn modulePawn;
         public readonly IAssemblyModuleType moduleType;
-        public readonly ModuleRoot root;
+        public readonly PawnAssemblyModuleRoot root;
         public readonly int pointIndex;
 
-        public ModuleRootInfo(Pawn modulePawn, IAssemblyModuleType moduleType, ModuleRoot root, int pointIndex)
+        public ModuleRootInfo(Pawn modulePawn, IAssemblyModuleType moduleType, PawnAssemblyModuleRoot root, int pointIndex)
         { 
             this.modulePawn = modulePawn;
             this.moduleType = moduleType;

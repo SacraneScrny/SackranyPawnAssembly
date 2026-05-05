@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SackranyPawnAssembly.Managers
 {
-    public static class AssemblyPool
+    public static class PawnAssemblyPool
     {
         public static int GetCount(string referenceGuid) =>
             _pool.TryGetValue(referenceGuid, out var stack) ? stack.Count : 0;
@@ -16,14 +16,14 @@ namespace SackranyPawnAssembly.Managers
         static readonly Dictionary<string, PawnAssembly> _templates = new();
         static readonly Dictionary<int, PawnAssembly> _goToAssembly = new();
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Init()
         {
             _pool.Clear();
             _templates.Clear();
             _goToAssembly.Clear();
 
-            foreach (var assembly in AssemblyResourcesCache.GetAllAssemblies())
+            foreach (var assembly in PawnAssemblyResourcesCache.GetAllAssemblies())
                 RegisterTemplate(assembly);
         }
 

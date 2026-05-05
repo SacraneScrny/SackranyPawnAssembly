@@ -3,9 +3,11 @@ using System.Collections.Generic;
 
 using SackranyPawn.Components;
 using SackranyPawn.Entities.Modules;
+using SackranyPawn.Entities.Modules.ModuleComposition;
 using SackranyPawn.Extensions;
 
 using SackranyPawnAssembly.Components;
+using SackranyPawnAssembly.Entities;
 using SackranyPawnAssembly.ModuleTypes;
 
 using UnityEngine;
@@ -13,21 +15,26 @@ using UnityEngine;
 namespace SackranyPawnAssembly.Limbs
 {
     [Serializable]
-    public class AssemblyDynamicModules : Limb
+    public class AssemblyDynamicModules : Limb, IAssemblyLimb
     {
         [SerializeField] Pawn[] DefaultModules;
 
-        [Dependency] ModuleRoot _mainRoot;
+        [Dependency] PawnAssemblyModuleRoot _mainRoot;
+        [Dependency] PawnAssembly _assembly;
 
-        readonly Dictionary<Pawn, ModuleRoot> _rootByModule = new();
-        readonly Dictionary<ModuleRoot, List<Pawn>> _modulesByRoot = new();
+        readonly Dictionary<Pawn, PawnAssemblyModuleRoot> _rootByModule = new();
+        readonly Dictionary<PawnAssemblyModuleRoot, List<Pawn>> _modulesByRoot = new();
         readonly Dictionary<int, List<Pawn>> _modulesByType = new();
+        
+        readonly List<Pawn> _defaults = new();
 
         protected override void OnStart()
         {
-            if (DefaultModules == null || _mainRoot == null)
-                return;
-
+            LoadDefaultModules();
+        }
+        void LoadDefaultModules()
+        {
+            if (!_assembly.IsNew) return;
             foreach (var d in DefaultModules)
             {
                 if (d == null)
@@ -52,13 +59,51 @@ namespace SackranyPawnAssembly.Limbs
 
                 if (!AddModule(new ModuleRootInfo(module, type.ModuleType, _mainRoot, pointIndex)))
                     module.Push();
+                
+                _defaults.Add(module);
             }
         }
+        void RemoveDefaultModules()
+        {
+            foreach (var d in _defaults)
+            {
+                if (d == null)
+                    continue;
+
+                RemoveModule(d);
+            }
+            _defaults.Clear();
+        }
+        void FindUnlistedModules()
+        {
+            if (_mainRoot == null) return;
+
+            for (int i = 0; i < _mainRoot.Count; i++)
+            {
+                var pointRoot = _mainRoot.GetPointRoot(i);
+                if (pointRoot == null || pointRoot.childCount == 0) continue;
+
+                for (int j = 0; j < pointRoot.childCount; j++)
+                {
+                    var child = pointRoot.GetChild(j);
+                    var pawn = child.GetComponent<Pawn>();
+                    if (pawn == null) continue;
+
+                    if (_rootByModule.ContainsKey(pawn)) continue;
+
+                    if (!pawn.TryGet(out AssemblyModuleType type) || type.ModuleType == null) continue;
+
+                    AddModule(new ModuleRootInfo(pawn, type.ModuleType, _mainRoot, i));
+                }
+            }
+        }
+        
         protected override void OnReset()
         {
             _rootByModule.Clear();
             _modulesByType.Clear();
             _modulesByRoot.Clear();
+            _defaults.Clear();
         }
 
         int FindPointIndex(IAssemblyModuleType moduleType)
@@ -88,7 +133,7 @@ namespace SackranyPawnAssembly.Limbs
             if (!info.root.SetModule(info))
                 return false;
 
-            var root = info.modulePawn.GetComponent<ModuleRoot>();
+            var root = info.modulePawn.GetComponent<PawnAssemblyModuleRoot>();
             _rootByModule[info.modulePawn] = root;
 
             if (!_modulesByType.TryGetValue(info.moduleType.Id, out var byType))
@@ -108,11 +153,11 @@ namespace SackranyPawnAssembly.Limbs
                 byRoot.Add(info.modulePawn);
             }
 
-            Pawn.Event.Publish<PawnAssemblyEvents.OnModuleAdded, ModuleRootInfo>(info);
+            Pawn.Event.Publish<PawnAssemblyEvents.OnModuleAdded, ModuleRootInfo>(info, true);
             return true;
         }
 
-        void RemoveModulesByRoot(ModuleRoot root)
+        void RemoveModulesByRoot(PawnAssemblyModuleRoot root)
         {
             if (root == null)
                 return;
@@ -138,7 +183,7 @@ namespace SackranyPawnAssembly.Limbs
 
             _rootByModule.TryGetValue(module, out var root);
             if (root == null)
-                root = module.GetComponent<ModuleRoot>();
+                root = module.GetComponent<PawnAssemblyModuleRoot>();
 
             RemoveModulesByRoot(root);
 
@@ -158,8 +203,8 @@ namespace SackranyPawnAssembly.Limbs
 
             _rootByModule.Remove(module);
 
-            Pawn.Event.Publish<PawnAssemblyEvents.OnModuleRemoved, IAssemblyModuleType>(mtype.ModuleType);
             module.Push();
+            Pawn.Event.Publish<PawnAssemblyEvents.OnModuleRemoved, IAssemblyModuleType>(mtype.ModuleType, true);
             return true;
         }
         
@@ -178,6 +223,16 @@ namespace SackranyPawnAssembly.Limbs
                 return list;
 
             return Array.Empty<Pawn>();
+        }
+        
+        public void OnAssemblySerialize(IReadOnlyList<Pawn> _assemblyPawns)
+        {
+            
+        }
+        public void OnAssemblyDeserialize(IReadOnlyList<Pawn> _assemblyPawns)
+        {
+            RemoveDefaultModules();
+            FindUnlistedModules();
         }
     }
 }

@@ -26,7 +26,7 @@ namespace SackranyPawnAssembly.Serializable
                 foreach (var data in _serializedData.Data)
                     data.Value.ExistedInScene = false;
                 
-                var assemblies = Object.FindObjectsByType<Components.PawnAssembly>(FindObjectsSortMode.None);
+                var assemblies = Object.FindObjectsByType<Components.PawnAssembly>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
                 foreach (var assembly in assemblies)
                 {
                     var refId = assembly.GetComponent<Components.PawnAssemblyReference>();
@@ -43,6 +43,7 @@ namespace SackranyPawnAssembly.Serializable
                     assemblyData.Position = assembly.transform.position;
                     assemblyData.Rotation = assembly.transform.rotation;
                     assemblyData.Data = assembly.Serialize();
+                    assemblyData.LimbData = assembly.Pawn.Serialize();
                 }
 
                 list.Add(_serializedData);
@@ -55,10 +56,10 @@ namespace SackranyPawnAssembly.Serializable
         {
             foreach (var (savedGuid, data) in _serializedData.Data)
             {
-                var assembly = AssemblyResourcesCache.GetAssembly(data.ReferenceGuid);
+                var assembly = PawnAssemblyResourcesCache.GetAssembly(data.ReferenceGuid);
                 if (assembly == null || !data.ExistedInScene) continue;
 
-                var pAss = AssemblyPool.Pop(data.ReferenceGuid);
+                var pAss = PawnAssemblyPool.Pop(data.ReferenceGuid);
                 pAss.Load(savedGuid);
             }
         }
@@ -80,6 +81,7 @@ namespace SackranyPawnAssembly.Serializable
         public Vector3 Position;
         public Quaternion Rotation;
         public List<PawnPartData> Data = new ();
+        public Dictionary<Type, object[]> LimbData;
     }
     [Serializable]
     public class PawnPartData

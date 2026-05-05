@@ -7,7 +7,7 @@ namespace SackranyPawnAssembly.Entities
 {
     public interface IAssemblyLimb
     {
-        void OnAssemblySerialize(IReadOnlyDictionary<string, Pawn> _assemblyPawns);
-        void OnAssemblyDeserialize(IReadOnlyDictionary<string, Pawn> _assemblyPawns);
+        void OnAssemblySerialize(IReadOnlyList<Pawn> _assemblyPawns);
+        void OnAssemblyDeserialize(IReadOnlyList<Pawn> _assemblyPawns);
     }
 }
