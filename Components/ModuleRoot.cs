@@ -72,7 +72,7 @@ namespace SackranyPawnAssembly.Components
         public readonly int pointIndex;
 
         public ModuleRootInfo(Pawn modulePawn, IAssemblyModuleType moduleType, ModuleRoot root, int pointIndex)
-        {
+        { 
             this.modulePawn = modulePawn;
             this.moduleType = moduleType;
             this.root = root;

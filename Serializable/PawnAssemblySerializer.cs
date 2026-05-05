@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Sackrany.SerializableData;
 
 using SackranyPawnAssembly.Cache;
+using SackranyPawnAssembly.Managers;
 
 using UnityEngine;
 
@@ -57,8 +58,7 @@ namespace SackranyPawnAssembly.Serializable
                 var assembly = AssemblyResourcesCache.GetAssembly(data.ReferenceGuid);
                 if (assembly == null || !data.ExistedInScene) continue;
 
-                var go = Object.Instantiate(assembly.gameObject);
-                var pAss = go.GetComponent<Components.PawnAssembly>();
+                var pAss = AssemblyPool.Pop(data.ReferenceGuid);
                 pAss.Load(savedGuid);
             }
         }

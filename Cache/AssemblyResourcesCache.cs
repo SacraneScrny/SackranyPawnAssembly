@@ -48,7 +48,7 @@ namespace SackranyPawnAssembly.Cache
 
             foreach (string path in folders)
             {
-                if (!UnityEditor.AssetDatabase.IsValidFolder(path))
+                if (!UnityEditor.AssetDatabase.IsValidFolder(resPath + path))
                 {
                     string[] parts = (resPath + path).Split('/');
                     string current = parts[0];
